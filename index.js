@@ -189,7 +189,7 @@ function loadConfig() {
     const dPORT = 31444;
     const dBlackList = ['.lnk', '.ini', '.bin'];
     const dShrUnlink = true;
-    const dStartDir = 'C:/';
+    const dStartDir = process.cwd();
     try {
         const json = require('./config');
         PORT = json.port || dPORT;
