@@ -1,0 +1,14 @@
+{
+  "name": "vezlox-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@kxghnpm/kx-file-lister-sync": "^1.0.2",
+    "ws": "^7.2.3",
+    "@kxghnpm/kx-shredder-sync": "^1.0.0"
+  }
+}
