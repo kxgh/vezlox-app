@@ -10,6 +10,7 @@ const ezlox = require('./k-ezlox')();
 const path = require('path');
 const shr = require('@kxghnpm/kx-shredder-sync').createShredder();
 const pin = require('./pin');
+const IGNORE_PIN = false;
 
 let fl;
 let begun = false;
@@ -25,7 +26,8 @@ function begin() {
     if (begun)
         return;
     begun = true;
-    PIN = pin.genInjectGet();
+    if(!IGNORE_PIN)
+        PIN = pin.genInjectGet();
     loadConfig();
     WSS = new WS.Server({port: PORT}, function () {
         console.info('listening on port', PORT);
@@ -54,7 +56,7 @@ function sendMsg(msg, ws) {
 }
 
 async function onMsg(msg, ws) {
-    if (msg.pin != PIN) {
+    if (msg.pin != PIN && !IGNORE_PIN) {
         console.warn('Received message with incorrect pin, shutting down...');
         close();
         return;
@@ -117,7 +119,9 @@ function setStartDir(target) {
         blackList: BLACK_LIST,
         shredUnlinks: SHRED_UNLINKS
     });
-    fs.writeFile(cleanPath('./config.json'), content, 'utf8', () => {
+    fs.writeFile(cleanPath('./config.json'), content, 'utf8', (err) => {
+        if(err)
+            console.error(err)
     });
 }
 
