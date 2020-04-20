@@ -8,7 +8,8 @@ const WS = require('ws');
 const fs = require('fs');
 const ezlox = require('./k-ezlox')();
 const path = require('path');
-const shr = require('@kxghnpm/kx-shredder-sync').createShredder();
+const Shredder = require('@kxghnpm/kx-shredder-sync');
+const shr = Shredder.createShredder();
 const pin = require('./pin');
 const IGNORE_PIN = false;
 
@@ -26,7 +27,7 @@ function begin() {
     if (begun)
         return;
     begun = true;
-    if(!IGNORE_PIN)
+    if (!IGNORE_PIN)
         PIN = pin.genInjectGet();
     loadConfig();
     WSS = new WS.Server({port: PORT}, function () {
@@ -76,7 +77,9 @@ async function onMsg(msg, ws) {
             explore(msg.target, ws);
         }
         if (msg.type === 'shred') {
-            shred(msg.target);
+            const strategy = msg.strategy,
+                passCount = msg.passCount;
+            shred(msg.target, strategy, passCount);
             const resp = browse(path.dirname(msg.target));
             resp.sid = msg.sid;
             sendMsg(resp, ws);
@@ -110,7 +113,7 @@ async function onMsg(msg, ws) {
 function setStartDir(target) {
     target = cleanPath(target);
     if (!target || !fl.isDirectory(target)) {
-        throw new Error('Bad path at setting default directory: ' + target)
+        throw new Error('Invalid path while setting default directory: ' + target)
     }
     START_DIR = target;
     const content = JSON.stringify({
@@ -120,7 +123,7 @@ function setStartDir(target) {
         shredUnlinks: SHRED_UNLINKS
     });
     fs.writeFile(cleanPath('./config.json'), content, 'utf8', (err) => {
-        if(err)
+        if (err)
             console.error(err)
     });
 }
@@ -182,11 +185,25 @@ function run(target, ws) {
     });
 }
 
-function shred(target) {
-    if (target)
+function shred(target, strategy, passCount) {
+    if (target) {
+        shr.opts.strategy = Shredder.strategies.US_DOD;
+        shr.opts.passCount = 1;
+        if(strategy && typeof strategy == 'string'){
+            if(/zero/i.test(strategy))
+                shr.opts.strategy = Shredder.strategies.ZERO_BYTES;
+            else if(/ff/i.test(strategy))
+                shr.opts.strategy = Shredder.strategies.FF_BYTES;
+            else if(/rand/i.test(strategy))
+                shr.opts.strategy = Shredder.strategies.RANDOM_BYTES;
+            else if(/us.*dod/i.test(strategy))
+                shr.opts.strategy = Shredder.strategies.US_DOD;
+        }
+        if(passCount && typeof passCount == 'number')
+            shr.opts.passCount = passCount;
         shr.shredOne(cleanPath(target), SHRED_UNLINKS);
-    else
-        throw new Error(`Can't shred: bad path ${target}`);
+    } else
+        throw new Error(`Can't shred: invalid path ${target}`);
 }
 
 function loadConfig() {
