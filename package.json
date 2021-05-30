@@ -8,7 +8,7 @@
   "license": "ISC",
   "dependencies": {
     "@kxghnpm/kx-file-lister-sync": "^1.0.2",
-    "ws": "^7.2.3",
+    "ws": "^7.4.6",
     "@kxghnpm/kx-shredder-sync": "^1.0.0"
   }
 }
